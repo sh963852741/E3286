@@ -65,6 +65,9 @@ void packet_handler(u_char *param, const struct pcap_pkthdr *header, const u_cha
 int macCmp(mac_d a, mac_d b);
 #define Max_Num_Adapter 10
 char		AdapterList[Max_Num_Adapter][1024];
+long long int allmac[3][1000] = {0};
+mac_d maclist[1000];
+int macnum;
 mac_d ownmac;
 u_int get;
 u_int sent;
@@ -210,6 +213,7 @@ int main()
 	FILE *q = fopen("record.txt", "w+");
 	fclose(q);	
 	minute = 0;
+	macnum = 0;
 	pcap_loop(adhandle, 0, packet_handler, NULL);
 	return 0;
 }
@@ -283,14 +287,87 @@ void packet_handler(u_char *param, const struct pcap_pkthdr *header, const u_cha
 	);
 	printf("%d\n",header->len);
 	
-	if (macCmp(mh->sadder, ownmac))
+	if (macCmp(mh->sadder, ownmac))//源地址
 	{
+		int number;
 		sent += header->len;
+		long long int s = 0;
+		s += mh->dadder.first;
+		s = s << 8;
+		s += mh->dadder.second;
+		s = s << 8;
+		s += mh->dadder.third;
+		s = s << 8;
+		s += mh->dadder.forth;
+		s = s << 8;
+		s += mh->dadder.fifth;
+		s = s << 8;
+		s += mh->dadder.sixth;
+		for (number = 0; number < macnum; number++)
+		{
+			if (s == allmac[0][number])
+			{
+				break;
+			}
+		}
+		if (number == macnum)
+		{
+			allmac[0][macnum] = s;
+			
+			allmac[1][macnum] += header->len;
+			maclist[macnum].first= mh->dadder.first;
+			maclist[macnum].second = mh->dadder.second;
+			maclist[macnum].third= mh->dadder.third;
+			maclist[macnum].forth = mh->dadder.forth;
+			maclist[macnum].fifth = mh->dadder.fifth;
+			maclist[macnum].sixth = mh->dadder.sixth;
+			macnum++;
+		}
+		else if (number < macnum)
+		{
+			allmac[1][number] += header->len;
+		}
 	}
 	else
 	{
-		if (macCmp(mh->dadder, ownmac))
+		if (macCmp(mh->dadder, ownmac))//目的地址
 		{
+			long long int s = 0;
+			s += mh->sadder.first;
+			s = s << 8;
+			s += mh->sadder.second;
+			s = s << 8;
+			s += mh->sadder.third;
+			s = s << 8;
+			s += mh->sadder.forth;
+			s = s << 8;
+			s += mh->sadder.fifth;
+			s = s << 8;
+			s += mh->sadder.sixth;
+			int number;
+			for (number = 0; number < macnum; number++)
+			{
+				if (s == allmac[0][number])
+				{
+					break;
+				}
+			}
+			if (number == macnum)
+			{
+				allmac[0][macnum] = s;
+				allmac[2][macnum] += header->len;
+				maclist[macnum].first = mh->sadder.first;
+				maclist[macnum].second = mh->sadder.second;
+				maclist[macnum].third = mh->sadder.third;
+				maclist[macnum].forth = mh->sadder.forth;
+				maclist[macnum].fifth = mh->sadder.fifth;
+				maclist[macnum].sixth = mh->sadder.sixth;
+				macnum++;
+			}
+			else if (number < macnum)
+			{
+				allmac[2][number] += header->len;
+			}
 			get += header->len;
 		}
 		else if (mh->dadder.first == 255 &&
@@ -299,19 +376,93 @@ void packet_handler(u_char *param, const struct pcap_pkthdr *header, const u_cha
 			mh->dadder.forth == 255 &&
 			mh->dadder.fifth == 255 &&
 			mh->dadder.sixth == 255)
-		{
-			get += header->len;
-			broad += header->len;
+		  {
+			 long long int s = 0;
+			 s += mh->sadder.first;
+			 s = s << 8;
+			 s += mh->sadder.second;
+			 s = s << 8;
+			 s += mh->sadder.third;
+			 s = s << 8;
+			 s += mh->sadder.forth;
+			 s = s << 8;
+			 s += mh->sadder.fifth;
+			 s=s << 8;
+			 s += mh->sadder.sixth;
+			 int number;
+			 for (number = 0; number < macnum; number++)
+			 {
+				if (s == allmac[0][number])
+				{
+					break;
+				}
+			 }
+			 if (number == macnum)
+			 {
+				allmac[0][macnum] = s;
+			
+			 	allmac[2][macnum] += header->len;
+				maclist[macnum].first = mh->sadder.first;
+				maclist[macnum].second = mh->sadder.second;
+				maclist[macnum].third = mh->sadder.third;
+				maclist[macnum].forth = mh->sadder.forth;
+				maclist[macnum].fifth = mh->sadder.fifth;
+				maclist[macnum].sixth = mh->sadder.sixth;
+				macnum++;
+			 }
+			 else if (number < macnum)
+			 {
+				allmac[2][number] += header->len;
+			 }
+			 get += header->len;
+			 broad += header->len;
 		}
-		else if ((mh->dadder.first & 0xfe) == 1)
+		else if ((mh->dadder.first & 0x01) == 1)
 		{
+			long long int s = 0;
+			s += mh->sadder.first;
+			s=s << 8;
+			s += mh->sadder.second;
+			s=s << 8;
+			s += mh->sadder.third;
+			s=s << 8;
+			s += mh->sadder.forth;
+			s=s << 8;
+			s += mh->sadder.fifth;
+			s=s << 8;
+			s += mh->sadder.sixth;
+			int number;
+			for (number = 0; number < macnum; number++)
+			{
+				if (s == allmac[0][number])
+				{
+					break;
+				}
+			}
+			if (number == macnum)
+			{
+				allmac[0][macnum] = s;
+		
+				allmac[2][macnum] += header->len;
+				maclist[macnum].first = mh->sadder.first;
+				maclist[macnum].second = mh->sadder.second;
+				maclist[macnum].third = mh->sadder.third;
+				maclist[macnum].forth = mh->sadder.forth;
+				maclist[macnum].fifth = mh->sadder.fifth;
+				maclist[macnum].sixth = mh->sadder.sixth;
+				macnum++;
+			}
+			else if (number < macnum)
+			{
+				allmac[2][number] += header->len;
+			}
 			multi += header->len;
 			get += header->len;
 		}
 	}
 
 
-	if (t2 - t1 > 60)
+	if (t2 - t1 > 5)
 	{
 		minute++;
 		FILE* q = fopen("record.txt", "a+");
@@ -325,6 +476,28 @@ void packet_handler(u_char *param, const struct pcap_pkthdr *header, const u_cha
 		fprintf(q,"收到的多播数据量为：%d\n", multi);
 		fprintf(q,"收到的广播数据量为：%d\n", broad);
 		fprintf(q,"发送数据量为：%d\n", sent);
+
+		for (int i = 0; i < macnum; i++)
+		{
+
+			fprintf(q, "物理地址：");
+			fprintf(q, "%02x-%02x-%02x-%02x-%02x-%02x,", maclist[i].first, maclist[i].second, maclist[i].third, maclist[i].forth, maclist[i].fifth, maclist[i].sixth);
+			fprintf(q, "发送到此地址：%d", allmac[1][i]);
+			fprintf(q, " 从此地址接受：%d", allmac[2][i]);
+			if (allmac[1][i] > 1048576 || allmac[2][i] > 1048576)
+			{
+				fprintf(q, " 此地址的流程达到阈值，请注意");
+			}
+			else
+			{
+				fprintf(q, " 此地址的流量未达到阈值");
+			}
+			fprintf(q, "\n");
+			allmac[0][i] = 0;
+			allmac[1][i] = 0;
+			allmac[2][i] = 0;
+		}
+		macnum = 0;
 		t1 = t2;
 		get = 0;
 		sent = 0;
